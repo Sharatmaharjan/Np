@@ -126,7 +126,7 @@ In this example:
 
 #### Communicating with a Group
 
-##### Sending Data to a Multicast Group
+#### Sending Data to a Multicast Group
 
 **Steps to Send Data:**
 
@@ -166,7 +166,7 @@ In this example:
 - A `DatagramPacket` containing the message "Hello, multicast group!" is created.
 - The packet is sent to the multicast group `230.0.0.0` on port 4446.
 
-##### Receiving Data from a Multicast Group
+#### Receiving Data from a Multicast Group
 
 **Steps to Receive Data:**
 
