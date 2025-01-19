@@ -177,4 +177,141 @@ Hostname: lhr25s08-in-f4.1e100.net
 2. **Exceptions**: `UnknownHostException` is thrown when the hostname/IP address cannot be resolved.
 3. **IPv6 Support**: Works for both IPv4 and IPv6 addresses.
 4. **Reachability**: Useful for network diagnostics and monitoring.
+---
 
+
+### **1. `public boolean isAnyLocalAddress()`**
+- **Purpose**: This method checks if the IP address is the "any local" address (`0.0.0.0` for IPv4 or `::/128` for IPv6). It is used to refer to a non-specific local address.
+- **Returns**: `true` if the address is the any local address; otherwise, `false`.
+
+### **Example**:
+```java
+InetAddress inet = InetAddress.getByName("0.0.0.0");
+System.out.println(inet.isAnyLocalAddress());  // true for IPv4 any local address
+```
+
+### **2. `public boolean isLoopbackAddress()`**
+- **Purpose**: This method checks if the address is a loopback address (e.g., `127.0.0.1` for IPv4 or `::1` for IPv6). Loopback addresses are used to refer to the local machine.
+- **Returns**: `true` if the address is a loopback address; otherwise, `false`.
+
+### **Example**:
+```java
+InetAddress inet = InetAddress.getByName("127.0.0.1");
+System.out.println(inet.isLoopbackAddress());  // true for IPv4 loopback address
+```
+
+### **3. `public boolean isLinkLocalAddress()`**
+- **Purpose**: This method checks if the address is a link-local address. These addresses are used for communication within a single network segment (e.g., `169.254.x.x` for IPv4 or `fe80::/10` for IPv6).
+- **Returns**: `true` if the address is a link-local address; otherwise, `false`.
+
+### **Example**:
+```java
+InetAddress inet = InetAddress.getByName("169.254.0.1");
+System.out.println(inet.isLinkLocalAddress());  // true for IPv4 link-local address
+```
+
+### **4. `public boolean isSiteLocalAddress()`**
+- **Purpose**: This method checks if the address is a site-local address. Site-local addresses are used within an organization or site (e.g., `10.x.x.x` or `192.168.x.x` for IPv4 or `fec0::/10` for IPv6).
+- **Returns**: `true` if the address is a site-local address; otherwise, `false`.
+
+### **Example**:
+```java
+InetAddress inet = InetAddress.getByName("192.168.1.1");
+System.out.println(inet.isSiteLocalAddress());  // true for IPv4 site-local address
+```
+
+### **5. `public boolean isMulticastAddress()`**
+- **Purpose**: This method checks if the address is a multicast address (e.g., `224.0.0.0` to `239.255.255.255` for IPv4 or `ff00::/8` for IPv6).
+- **Returns**: `true` if the address is a multicast address; otherwise, `false`.
+
+### **Example**:
+```java
+InetAddress inet = InetAddress.getByName("224.0.0.1");
+System.out.println(inet.isMulticastAddress());  // true for IPv4 multicast address
+```
+
+### **6. `public boolean isMCGlobal()`**
+- **Purpose**: This method checks if the multicast address is globally scoped. Global multicast addresses are in the range `ff0x::/8` (for IPv6) or `224.0.0.0` to `239.255.255.255` (for IPv4).
+- **Returns**: `true` if the address is a global multicast address; otherwise, `false`.
+
+### **Example**:
+```java
+InetAddress inet = InetAddress.getByName("233.0.0.1");
+System.out.println(inet.isMCGlobal());  // true for a global IPv4 multicast address
+```
+
+### **7. `public boolean isMCNodeLocal()`**
+- **Purpose**: This method checks if the multicast address is node-local (for communication within a single host, like `ff01::/8` for IPv6 or `224.0.0.1` for IPv4).
+- **Returns**: `true` if the address is a node-local multicast address; otherwise, `false`.
+
+### **Example**:
+```java
+InetAddress inet = InetAddress.getByName("ff01::1");
+System.out.println(inet.isMCNodeLocal());  // true for node-local multicast address
+```
+
+### **8. `public boolean isMCLinkLocal()`**
+- **Purpose**: This method checks if the multicast address is link-local, meaning it can be used only within the scope of a single network segment (like `ff02::/8` for IPv6 or `224.0.0.0` to `224.0.0.255` for IPv4).
+- **Returns**: `true` if the address is a link-local multicast address; otherwise, `false`.
+
+### **Example**:
+```java
+InetAddress inet = InetAddress.getByName("ff02::1");
+System.out.println(inet.isMCLinkLocal());  // true for IPv6 link-local multicast address
+```
+
+### **9. `public boolean isMCSiteLocal()`**
+- **Purpose**: This method checks if the multicast address is site-local, meaning it is scoped to a site (e.g., `ff05::/8` for IPv6 or `233.x.x.x` for IPv4).
+- **Returns**: `true` if the address is a site-local multicast address; otherwise, `false`.
+
+### **Example**:
+```java
+InetAddress inet = InetAddress.getByName("ff05::1");
+System.out.println(inet.isMCSiteLocal());  // true for site-local multicast address
+```
+
+### **10. `public boolean isMCOrgLocal()`**
+- **Purpose**: This method checks if the multicast address is organization-local, meaning it is scoped to an organization (e.g., `ff08::/8` for IPv6 or `233.x.x.x` for IPv4).
+- **Returns**: `true` if the address is an organization-local multicast address; otherwise, `false`.
+
+### **Example**:
+```java
+InetAddress inet = InetAddress.getByName("ff08::1");
+System.out.println(inet.isMCOrgLocal());  // true for organization-local multicast address
+```
+
+### Summary of Methods:
+- `isAnyLocalAddress()`: Checks for the any local address (e.g., `0.0.0.0`).
+- `isLoopbackAddress()`: Checks for the loopback address (e.g., `127.0.0.1` or `::1`).
+- `isLinkLocalAddress()`: Checks for link-local addresses (e.g., `169.254.x.x` or `fe80::/10`).
+- `isSiteLocalAddress()`: Checks for site-local addresses (e.g., `10.x.x.x`, `192.168.x.x`).
+- `isMulticastAddress()`: Checks for multicast addresses (e.g., `224.0.0.0` to `239.255.255.255` or `ff00::/8`).
+- `isMCGlobal()`: Checks if the multicast address is globally scoped.
+- `isMCNodeLocal()`: Checks if the multicast address is node-local.
+- `isMCLinkLocal()`: Checks if the multicast address is link-local.
+- `isMCSiteLocal()`: Checks if the multicast address is site-local.
+- `isMCOrgLocal()`: Checks if the multicast address is organization-local.
+
+---
+
+import java.net.*;
+
+public class HostnameComparison {
+    public static void main(String[] args) {
+        try {
+            // Getting InetAddress objects for two different hostnames
+            InetAddress example1 = InetAddress.getByName("www.google.com");
+            InetAddress example2 = InetAddress.getByName("google.com");
+
+            // Comparing the two InetAddress objects
+            if (example1.equals(example2)) {
+                System.out.println("www.google.com is the same as google.com");
+            } else {
+                System.out.println("www.google.com is not the same as google.com");
+            }
+
+        } catch (UnknownHostException ex) {
+            System.out.println("Host lookup failed.");
+        }
+    }
+}
