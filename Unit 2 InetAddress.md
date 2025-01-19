@@ -293,7 +293,7 @@ System.out.println(inet.isMCOrgLocal());  // true for organization-local multica
 - `isMCOrgLocal()`: Checks if the multicast address is organization-local.
 
 ---
-
+```
 import java.net.*;
 
 public class HostnameComparison {
@@ -315,3 +315,4 @@ public class HostnameComparison {
         }
     }
 }
+```
