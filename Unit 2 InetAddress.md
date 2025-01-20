@@ -316,3 +316,84 @@ public class HostnameComparison {
     }
 }
 ```
+---
+### SpamCheck
+```
+import java.net.*;
+import java.util.Scanner;
+
+public class SpamCheck {
+    public static final String BLACKHOLE = "sbl.spamhaus.org";
+
+    public static void main(String[] args) throws UnknownHostException {
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Enter the IP address to check: ");
+        String ipAddress = scanner.nextLine().trim();
+
+        if (isSpammer(ipAddress)) {
+            System.out.println(ipAddress + " is a known spammer.");
+        } else {
+            System.out.println(ipAddress + " appears legitimate.");
+        }
+
+        scanner.close();
+    }
+
+    private static boolean isSpammer(String ip) {
+        try {
+            InetAddress address = InetAddress.getByName(ip);
+            byte[] quad = address.getAddress(); // Get IP as byte array
+
+            String query = BLACKHOLE;
+            for (byte octet : quad) {
+                int unsignedByte = octet < 0 ? octet + 256 : octet;
+                query = unsignedByte + "." + query;
+            }
+
+            InetAddress.getByName(query); // DNS lookup
+            return true;  // If successful, IP is listed in Spamhaus
+        } catch (UnknownHostException e) {
+            return false; // IP is not listed in Spamhaus
+        }
+    }
+}
+```
+
+---
+### WebLog
+```
+import java.io.*; 
+import java.net.*;
+
+public class Weblog {
+    public static void main(String[] args) {
+        // Hardcoded file path for Windows desktop (update with actual username)
+        String filePath = "C:\\Users\\YourUsername\\Desktop\\weblog.txt";
+
+        try (FileInputStream fin = new FileInputStream(filePath);
+             Reader in = new InputStreamReader(fin);
+             BufferedReader bin = new BufferedReader(in)) {
+
+            String entry;
+            while ((entry = bin.readLine()) != null) {
+                // Separate out the IP address
+                int index = entry.indexOf(' ');
+                if (index == -1) continue;  // Skip invalid lines
+
+                String ip = entry.substring(0, index);
+                String theRest = entry.substring(index);
+
+                // Ask DNS for the hostname and print it out
+                try {
+                    InetAddress address = InetAddress.getByName(ip);
+                    System.out.println(address.getHostName() + theRest);
+                } catch (UnknownHostException ex) {
+                    System.err.println("Unable to resolve IP: " + ip);
+                }
+            }
+        } catch (IOException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+        }
+    }
+}
+```
