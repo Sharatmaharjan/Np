@@ -532,7 +532,7 @@ try {
 ---
 
 ### **Sample Log File:**
-Assume you have a log file (`weblog.txt`) on your desktop with the following content:
+sample log file (`weblog.txt`) :
 ```
 192.168.1.1 - - [10/Jan/2025:10:10:10] "GET /index.html HTTP/1.1"
 8.8.8.8 - - [10/Jan/2025:11:15:45] "POST /login HTTP/1.1"
