@@ -397,3 +397,119 @@ public class Weblog {
     }
 }
 ```
+### Explanation:
+### **1. Import Necessary Packages**
+```java
+import java.io.*; 
+import java.net.*;
+```
+- **`java.io.*`**: This package includes classes for input and output (I/O) operations such as reading from and writing to files.
+- **`java.net.*`**: This package provides classes for network operations, like resolving IP addresses to hostnames.
+
+### **2. Define the Class and Main Method**
+```java
+public class Weblog {
+    public static void main(String[] args) {
+```
+- **`public class Weblog`**: Declares a public class called `Weblog`.
+- **`public static void main(String[] args)`**: The entry point of the program. When the program runs, it begins executing from here.
+
+### **3. Define the File Path**
+```java
+String filePath = "C:\\Users\\YourUsername\\Desktop\\weblog.txt";
+```
+- The file path to the log file (`weblog.txt`) is specified here. The file should be located on your **Windows Desktop**. **Update `"YourUsername"`** to match your actual username on your system.
+- This is a **hardcoded file path**, which means it's fixed and will not change unless manually edited.
+
+### **4. Open the File for Reading**
+```java
+try (FileInputStream fin = new FileInputStream(filePath);
+     Reader in = new InputStreamReader(fin);
+     BufferedReader bin = new BufferedReader(in)) {
+```
+- **`FileInputStream fin = new FileInputStream(filePath)`**: Opens the file at the specified path (`weblog.txt`) in read mode.
+- **`InputStreamReader in = new InputStreamReader(fin)`**: Converts the raw byte stream into a character stream, which is easier to read as text.
+- **`BufferedReader bin = new BufferedReader(in)`**: Reads the file line by line efficiently using a buffered reader.
+
+### **5. Read the File Line by Line**
+```java
+String entry;
+while ((entry = bin.readLine()) != null) {
+```
+- **`entry = bin.readLine()`**: Reads one line from the file at a time.
+- The **`while`** loop continues until there are no more lines to read (i.e., `readLine()` returns `null`).
+
+### **6. Extract the IP Address from the Log Entry**
+```java
+int index = entry.indexOf(' ');
+if (index == -1) continue;  // Skip invalid lines
+
+String ip = entry.substring(0, index);
+String theRest = entry.substring(index);
+```
+- **`int index = entry.indexOf(' ')`**: Finds the position of the first space character (`' '`) in the `entry` string. This space separates the IP address from the rest of the log entry.
+- **`if (index == -1) continue;`**: If no space is found (i.e., the format of the log entry is incorrect), it skips to the next line.
+- **`String ip = entry.substring(0, index)`**: Extracts the IP address from the start of the string up to the first space.
+- **`String theRest = entry.substring(index)`**: Extracts the remaining part of the log entry after the IP address.
+
+### **7. Resolve the IP Address to a Hostname**
+```java
+try {
+    InetAddress address = InetAddress.getByName(ip);
+    System.out.println(address.getHostName() + theRest);
+} catch (UnknownHostException ex) {
+    System.err.println("Unable to resolve IP: " + ip);
+}
+```
+- **`InetAddress.getByName(ip)`**: Attempts to resolve the IP address into a hostname (e.g., `google.com`). This makes a DNS query to convert the IP address into a human-readable domain name.
+- **`System.out.println(address.getHostName() + theRest)`**: Prints the resolved hostname followed by the rest of the log entry.
+- If the IP cannot be resolved (e.g., if it's not a registered hostname), the program catches the exception and prints an error message.
+  - **`System.err.println("Unable to resolve IP: " + ip)`**: Prints an error message to standard error (`stderr`) indicating the failure to resolve the IP.
+
+### **8. Handle Input/Output Exceptions**
+```java
+} catch (IOException ex) {
+    System.out.println("Exception: " + ex.getMessage());
+}
+```
+- If there is any issue with reading the file (e.g., file not found), it will be caught here.
+- **`System.out.println("Exception: " + ex.getMessage())`**: Prints the exception message to standard output.
+
+### **9. Program Ends**
+```java
+}
+```
+- The program ends after all lines have been processed or if an error occurs.
+
+---
+
+### **Summary:**
+1. **Fixed File Path**: The program is designed to read a log file (`weblog.txt`) from the Desktop using a fixed file path for a **Windows** environment.
+2. **File Reading**: It reads the file line by line using `BufferedReader`.
+3. **IP Address Extraction**: It extracts the IP address from each log entry by looking for the first space.
+4. **DNS Resolution**: The program tries to resolve the extracted IP address to a hostname (e.g., `google.com`) using `InetAddress.getByName()`.
+5. **Output**: If successful, it prints the resolved hostname and the rest of the log entry; if not, it prints an error message.
+6. **Error Handling**: If the file can't be read or the IP address can't be resolved, it gracefully handles the errors with appropriate messages.
+
+---
+
+### **Sample Log File:**
+Assume you have a log file (`weblog.txt`) on your desktop with the following content:
+```
+192.168.1.1 - - [10/Jan/2025:10:10:10] "GET /index.html HTTP/1.1"
+8.8.8.8 - - [10/Jan/2025:11:15:45] "POST /login HTTP/1.1"
+```
+
+### **Sample Output:**
+```
+host1.local - - [10/Jan/2025:10:10:10] "GET /index.html HTTP/1.1"
+dns.google - - [10/Jan/2025:11:15:45] "POST /login HTTP/1.1"
+```
+
+If the IPs cannot be resolved, it will print something like:
+```
+Unable to resolve IP: 192.168.1.1
+Unable to resolve IP: 8.8.8.8
+```
+
+---
