@@ -1,7 +1,6 @@
 ### Example 1: Which protocols does a virtual machine support?
 
-```
-java
+```java
 import java.net.*;
 
 public class ProtocolTester {
