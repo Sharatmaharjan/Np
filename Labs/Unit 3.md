@@ -129,6 +129,12 @@ public class ContentGetter {
 
 ```
 
+#### Expected Output:
+
+```
+I got a sun.net.www.protocol.http.HttpURLConnection$HttpInputStream
+```
+
 ---
 #### Example 4. The parts of a URL
 ```java
@@ -138,7 +144,7 @@ public class URLSplitter {
     public static void main(String[] args) {
         try {
             // Create a URL object for a sample URL
-            URL url = new URL("https://www.example.com:8080/path/to/resource?name=JohnDoe#section");
+            URL url = new URL("https://www.example.com:8080/path/to/resource?name=SharatMaharjan#section");
 
             // Print the entire URL
             System.out.println("The URL is: " + url);
@@ -179,9 +185,20 @@ getHost() returns the host or domain of the URL (e.g., www.example.com).
 getPort() returns the port number. If no port is specified, it returns -1 (indicating the default port for the protocol).
 getPath() returns the path part of the URL (e.g., /path/to/resource).
 getRef() returns the fragment (or anchor) part of the URL, which is the part after the # symbol (e.g., section).
-getQuery() returns the query string (e.g., name=JohnDoe).
+getQuery() returns the query string (e.g., name=SharatMaharjan).
 ```
 
+#### Expected Output:
+```
+The URL is: https://www.example.com:8080/path/to/resource?name=SharatMaharjan#section
+The scheme is: https
+The user info is: null
+The host is: www.example.com
+The port is: 8080
+The path is: /path/to/resource
+The ref (fragment) is: section
+The query string is: name=SharatMaharjan
+```
 ---
 Example 5: Checking URL Equality: Are http://www.ibiblio.org and http://ibiblio.org the same?
 ```java
