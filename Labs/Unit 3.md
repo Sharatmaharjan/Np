@@ -60,9 +60,9 @@ public class SourceViewer {
             // Buffer the input to improve performance
             BufferedReader inData = new BufferedReader(new InputStreamReader(url.openStream()));
 
-/*The url.openStream() opens the connection and retrieves the web page's content as a byte stream.
-The InputStreamReader converts the byte stream into character data.
-The BufferedReader reads and stores multiple characters in memory for faster access.*/
+            /*The url.openStream() opens the connection and retrieves the web page's content as a byte stream.
+            The InputStreamReader converts the byte stream into character data.
+            The BufferedReader reads and stores multiple characters in memory for faster access.*/
 
             String line;
             while ((line = inData.readLine()) != null) {
