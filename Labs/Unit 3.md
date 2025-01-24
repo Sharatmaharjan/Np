@@ -42,7 +42,7 @@ http is supported
 https is supported
 ftp is supported
 mailto is supported
-telnet is supported
+telnet is not supported
 ```
 
 ---
