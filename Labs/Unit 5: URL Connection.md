@@ -97,7 +97,7 @@ public class DownloadWebPage {
 
 ### **Sample Output (Partial HTML Content of the Page)**
 
-```
+```html
 <div style="max-height: 200px; overflow-y: scroll;">
 <!doctype html>
 <html dir="ltr" lang="en-US" prefix="og: https://ogp.me/ns#">
