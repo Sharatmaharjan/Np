@@ -98,7 +98,6 @@ public class DownloadWebPage {
 ### **Sample Output (Partial HTML Content of the Page)**
 
 ```html
-<div style="max-height: 200px; overflow-y: scroll;">
 <!doctype html>
 <html dir="ltr" lang="en-US" prefix="og: https://ogp.me/ns#">
 <head>
@@ -116,7 +115,9 @@ public class DownloadWebPage {
   href="https://cdn.jsdelivr.net/npm/swiper@9/swiper-bundle.min.css"
 />
 
-<link rel="stylesheet" href="https://prime.edu.np/wp-content/themes/prime-college/assets/vendor/fancybox/jquery.fancybox.min.css">
+<details>
+  <summary>Click to view the full content</summary>
+  <link rel="stylesheet" href="https://prime.edu.np/wp-content/themes/prime-college/assets/vendor/fancybox/jquery.fancybox.min.css">
 
     <!-- -----Custom Style----- -->
 <link rel="stylesheet" href="https://prime.edu.np/wp-content/themes/prime-college/assets/css/style.css">
@@ -2678,6 +2679,9 @@ var wp_socializer = {"ajax_url":"https:\/\/prime.edu.np\/wp-admin\/admin-ajax.ph
   });
     });
 </script>
+
+</details>
+
 
 </body>
 </html>
