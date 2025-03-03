@@ -1,7 +1,10 @@
 1. keytool -genkeypair -alias serverkey -keyalg RSA -keysize 2048 -validity 365 -keystore serverkeystore.jks -storepass password -keypass password -dname "CN=localhost, OU=MyOrg, O=MyCompany, L=MyCity, S=MyState, C=US"
 2. keytool -exportcert -alias serverkey -keystore serverkeystore.jks -file servercert.cer -storepass password
 3. keytool -importcert -alias servercert -file servercert.cer -keystore clienttruststore.jks -storepass truststorepassword -noprompt
-
+  
+The server keystore (serverkeystore.jks) stores the server's private key and certificate .
+The client truststore (clienttruststore.jks) stores the server's certificate (or CA certificates) to verify the server's identity.
+These two components work together to establish secure communication over SSL/TLS.
 
   a. SecureServer.java
 
