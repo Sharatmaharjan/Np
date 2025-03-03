@@ -14,30 +14,34 @@ import javax.net.ssl.*;
 
 public class SecureServer {
     public static void main(String[] args) throws Exception {
-        // Load the keystore
+        // Load the keystore 
+        // A keystore is essentially a database (or file) that stores:
+        // Private Keys : Used to prove the identity of an entity (e.g., a server or client).
+        // Certificates : Contain public keys and are used to verify the identity of entities.
+
         KeyStore keyStore = KeyStore.getInstance("JKS");
         String keystorePath = "/home/sharat/Desktop/serverkeystore.jks";
         try (FileInputStream keyStoreFis = new FileInputStream(keystorePath)) {
-            keyStore.load(keyStoreFis, "password".toCharArray());
+            keyStore.load(keyStoreFis, "password".toCharArray());//Decrypts and loads the keystore contents
         }
 
         // Initialize the KeyManagerFactory with the keystore
-        KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-        kmf.init(keyStore, "password".toCharArray());
+        KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());//manages the server's private key and certificate(s)
+        kmf.init(keyStore, "password".toCharArray());//Initializes the factory with the loaded keystore and the private key password ("password")
 
         // Initialize the SSLContext with the KeyManagers from the KeyManagerFactory
-        SSLContext sslContext = SSLContext.getInstance("TLS");
+        SSLContext sslContext = SSLContext.getInstance("TLS");//Creates an SSLContext instance for the TLS protocol
         sslContext.init(kmf.getKeyManagers(), null, null);
 
         // Create SSL server socket factory from SSLContext
-        SSLServerSocketFactory sslServerSocketFactory = sslContext.getServerSocketFactory();
+        SSLServerSocketFactory sslServerSocketFactory = sslContext.getServerSocketFactory();//used to create SSL/TLS-enabled server sockets
 
         // Create SSL server socket
         int serverPort = 8443;
-        SSLServerSocket serverSocket = (SSLServerSocket) sslServerSocketFactory.createServerSocket(serverPort);
+        SSLServerSocket serverSocket = (SSLServerSocket) sslServerSocketFactory.createServerSocket(serverPort);//server is ready to accept client connections
 
         // Enable client authentication if needed
-        serverSocket.setNeedClientAuth(false);
+        serverSocket.setNeedClientAuth(false);//client does not need to prove its identity to the server
         System.out.println("Server started. Listening on port " + serverPort + "...");
 
         // Server loop
