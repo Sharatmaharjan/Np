@@ -2291,4 +2291,653 @@ public class FullFledgedHttpServer {
 }
 ```
 
-# Unit
+# Unit 9: Non Blocking I/O
+
+### Lab 1: Non Blocking I/O
+a. NonBlockingServer.java
+```java
+  import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
+import java.util.Iterator;
+import java.util.Set;
+
+public class NonBlockingServer {
+    public static void main(String[] args) throws IOException {
+        // Open a Selector for handling multiple channels in non-blocking mode
+        Selector selector = Selector.open();
+
+        // Open a ServerSocketChannel to listen for incoming client connections
+        ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
+
+        // Bind the server socket to localhost on port 8080
+        serverSocketChannel.bind(new InetSocketAddress("localhost", 8080));
+
+        // Configure the server socket channel to operate in non-blocking mode
+        serverSocketChannel.configureBlocking(false);
+
+        // Register the server socket channel with the selector for "accept" operations
+        serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
+
+        // Infinite loop to continuously handle incoming events
+        while (true) {
+            // Block until at least one channel is ready for an operation
+            selector.select();
+
+            // Get the set of keys corresponding to the channels that are ready
+            Set<SelectionKey> selectedKeys = selector.selectedKeys();
+
+            // Use an iterator to process each key
+            Iterator<SelectionKey> it = selectedKeys.iterator();
+
+            while (it.hasNext()) {
+                SelectionKey key = it.next();
+
+                // Check if the key indicates that a new client connection is ready to be accepted
+                if (key.isAcceptable()) {
+                    // Accept the incoming client connection
+                    ServerSocketChannel server = (ServerSocketChannel) key.channel();
+                    SocketChannel client = server.accept();
+
+                    // Configure the client socket channel to operate in non-blocking mode
+                    client.configureBlocking(false);
+
+                    // Register the client channel with the selector for "read" operations
+                    client.register(selector, SelectionKey.OP_READ);
+                } 
+                // Check if the key indicates that data is available to be read from a client
+                else if (key.isReadable()) {
+                    // Get the client channel and read data into a buffer
+                    SocketChannel client = (SocketChannel) key.channel();
+                    ByteBuffer buffer = ByteBuffer.allocate(256); // Allocate a buffer of size 256 bytes
+
+                    // Read data from the client into the buffer
+                    client.read(buffer);
+
+                    // Prepare the buffer for reading by flipping it
+                    buffer.flip();
+
+                    // Convert the buffer's content to a string and print it
+                    System.out.println(new String(buffer.array()).trim());
+
+                    // Close the client connection after reading the data
+                    client.close();
+                }
+
+                // Remove the processed key to avoid reprocessing it
+                it.remove();
+            }
+        }
+    }
+}
+```
+
+b. NonBlockingClient.java
+```java
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
+import java.nio.channels.SocketChannel;
+
+public class NonBlockingClient {
+    public static void main(String[] args) throws IOException {
+        // Define the server address (localhost on port 8080)
+        InetSocketAddress address = new InetSocketAddress("localhost", 8080);
+
+        // Open a SocketChannel and connect to the server
+        SocketChannel client = SocketChannel.open(address);
+
+        // Prepare the message to send to the server
+        String message = "Hello from client";
+
+        // Wrap the message bytes into a ByteBuffer for sending over the channel
+        ByteBuffer buffer = ByteBuffer.wrap(message.getBytes());
+
+        // Write the message to the server through the channel
+        client.write(buffer);
+
+        // Clear the buffer after writing (optional, as we're closing the channel next)
+        buffer.clear();
+
+        // Close the client channel after sending the message
+        client.close();
+    }
+}
+```
+
+---
+
+# UNIT 10: UDP Programs
+
+## Lab 1: UDP Client (Basic)
+
+```java
+import java.net.*;
+
+public class Client {
+    public static void main(String[] args) {
+        try {
+            // Create DatagramSocket (client side)
+            DatagramSocket socket = new DatagramSocket();
+
+            // Prepare message to send
+            String message = "hello server";
+            byte[] buffer = message.getBytes();
+
+            // Create packet with message, server IP and port
+            DatagramPacket packet = new DatagramPacket(
+                buffer, buffer.length,
+                InetAddress.getByName("127.0.0.1"), // Server address (localhost)
+                4567                               // Server port
+            );
+
+            // Send message to server
+            socket.send(packet);
+            System.out.println("Message sent: " + message);
+
+            // Prepare buffer to receive response
+            packet = new DatagramPacket(new byte[1500], 1500);
+            socket.receive(packet); // Receive reply from server
+
+            // Convert received bytes to string
+            message = new String(packet.getData()).trim();
+            System.out.println("Message received: " + message);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+**Sample Output (Client side):**
+
+```
+Message sent: hello server
+Message received: hello client
+```
+
+---
+
+## Lab 2: UDP Server (Basic)
+
+```java
+import java.net.*;
+
+public class Server {
+    public static void main(String[] args) {
+        try {
+            // Create DatagramSocket bound to port 4567
+            DatagramSocket socket = new DatagramSocket(4567);
+            System.out.println("Server is running...");
+
+            // Buffer to store client message
+            byte[] buffer = new byte[1500];
+            DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+
+            // Wait for client message
+            socket.receive(packet);
+            String message = new String(packet.getData()).trim();
+            System.out.println("Message received: " + message);
+
+            // Prepare reply message
+            InetAddress clientAddress = packet.getAddress();
+            int clientPort = packet.getPort();
+            message = "hello client";
+            buffer = message.getBytes();
+
+            // Send reply back to client
+            packet = new DatagramPacket(buffer, buffer.length, clientAddress, clientPort);
+            socket.send(packet);
+            System.out.println("Message sent: " + message);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+**Sample Output (Server side):**
+
+```
+Server is running...
+Message received: hello server
+Message sent: hello client
+```
+
+---
+
+## Lab 3: UDP Client (Interactive with Scanner)
+
+```java
+import java.net.*;
+import java.util.Scanner;
+
+public class Client {
+    public static void main(String[] args) {
+        try {
+            DatagramSocket socket = new DatagramSocket();
+            Scanner scanner = new Scanner(System.in);
+            String message;
+
+            // Keep sending messages until user types 'exit'
+            while (!(message = scanner.nextLine()).equalsIgnoreCase("exit")) {
+                // Convert message into byte array
+                byte[] buffer = message.getBytes();
+
+                // Send packet to server
+                DatagramPacket packet = new DatagramPacket(
+                    buffer, buffer.length,
+                    InetAddress.getByName("127.0.0.1"),
+                    4567
+                );
+                socket.send(packet);
+                System.out.println("Message sent: " + message);
+
+                // Receive reply from server
+                packet = new DatagramPacket(new byte[1500], 1500);
+                socket.receive(packet);
+                String reply = new String(packet.getData()).trim();
+                System.out.println("Message received: " + reply);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+**Sample Output (Client side, interactive):**
+
+```
+hello
+Message sent: hello
+Message received: hello
+how are you
+Message sent: how are you
+Message received: how are you
+exit
+```
+
+---
+
+## Lab 4: UDP Server (Echo Server with Loop)
+
+```java
+import java.net.*;
+
+public class Server {
+    public static void main(String[] args) {
+        try {
+            DatagramSocket socket = new DatagramSocket(4567);
+            System.out.println("Server is running...");
+
+            while (true) {
+                // Receive message from client
+                byte[] buffer = new byte[1500];
+                DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+                socket.receive(packet);
+                String message = new String(packet.getData()).trim();
+                System.out.println("Client: " + message);
+
+                // Echo back the message
+                InetAddress clientAddress = packet.getAddress();
+                int clientPort = packet.getPort();
+                buffer = message.getBytes();
+                packet = new DatagramPacket(buffer, buffer.length, clientAddress, clientPort);
+                socket.send(packet);
+                System.out.println("Server: " + message);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+**Sample Output (Server side, when multiple messages arrive):**
+
+```
+Server is running...
+Client: hello
+Server: hello
+Client: how are you
+Server: how are you
+```
+
+---
+
+
+Got it ✅
+You want me to do the same thing (rewrite, add **comments + explanations + sample output**) for **Unit 11: Multicasting** just like I did for Unit 2 (Internet Addresses) and Unit 10 (UDP).
+
+Here’s the rewritten and detailed version:
+
+---
+
+# UNIT 11: Multicasting
+
+### Lab 1: Creating a Multicast Socket
+
+```java
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.MulticastSocket;
+
+public class MulticastExample {
+    public static void main(String[] args) {
+        try {
+            // Create a MulticastSocket bound to port 4446
+            MulticastSocket multicastSocket = new MulticastSocket(4446);
+            System.out.println("Multicast Socket created on port 4446");
+
+            // Join a multicast group at 230.0.0.0
+            InetAddress group = InetAddress.getByName("230.0.0.0");
+            multicastSocket.joinGroup(group);
+            System.out.println("Joined multicast group: 230.0.0.0");
+
+            // Leave the group and close
+            multicastSocket.leaveGroup(group);
+            multicastSocket.close();
+            System.out.println("Left group and socket closed");
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+**Sample Output:**
+
+```
+Multicast Socket created on port 4446
+Joined multicast group: 230.0.0.0
+Left group and socket closed
+```
+
+---
+
+### Lab 2: Sending Data to a Multicast Group
+
+```java
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.InetAddress;
+import java.net.MulticastSocket;
+
+public class MulticastSender {
+    public static void main(String[] args) {
+        try {
+            // Create multicast socket
+            MulticastSocket socket = new MulticastSocket();
+
+            // Multicast group
+            InetAddress group = InetAddress.getByName("230.0.0.0");
+
+            // Message to send
+            String message = "Hello, multicast group!";
+            byte[] buffer = message.getBytes();
+
+            // Packet for multicast group at port 4446
+            DatagramPacket packet = new DatagramPacket(buffer, buffer.length, group, 4446);
+
+            // Send packet
+            socket.send(packet);
+            System.out.println("Message sent: " + message);
+
+            socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+**Sample Output:**
+
+```
+Message sent: Hello, multicast group!
+```
+
+---
+
+### Lab 3: Receiving Data from a Multicast Group
+
+```java
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.InetAddress;
+import java.net.MulticastSocket;
+
+public class MulticastReceiver {
+    public static void main(String[] args) {
+        try {
+            // Create socket bound to port 4446
+            MulticastSocket socket = new MulticastSocket(4446);
+
+            // Join multicast group
+            InetAddress group = InetAddress.getByName("230.0.0.0");
+            socket.joinGroup(group);
+            System.out.println("Joined multicast group: 230.0.0.0");
+
+            // Prepare buffer for receiving
+            byte[] buffer = new byte[256];
+            DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+
+            // Receive packet
+            socket.receive(packet);
+            String received = new String(packet.getData(), 0, packet.getLength());
+            System.out.println("Received message: " + received);
+
+            // Leave group
+            socket.leaveGroup(group);
+            socket.close();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+**Sample Output (when sender is running):**
+
+```
+Joined multicast group: 230.0.0.0
+Received message: Hello, multicast group!
+```
+
+---
+
+# Unit 12: Remote Method Invocation (RMI)
+
+## 12.1 Defining and Implementing RMI Service Interface
+
+---
+
+### Step 1: Define the RMI Service Interface
+
+```java
+import java.rmi.Remote;
+import java.rmi.RemoteException;
+
+// Remote interface must extend java.rmi.Remote
+public interface Calculator extends Remote {
+    // Each remote method must throw RemoteException
+    int add(int a, int b) throws RemoteException;
+    int subtract(int a, int b) throws RemoteException;
+}
+```
+
+✅ **Explanation:**
+
+* The `Calculator` interface extends `Remote`.
+* Remote methods (`add`, `subtract`) must declare `throws RemoteException`.
+
+---
+
+### Step 2: Implement the RMI Service Interface
+
+```java
+import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
+
+// Implementation must extend UnicastRemoteObject
+public class CalculatorImpl extends UnicastRemoteObject implements Calculator {
+
+    // Constructor must throw RemoteException
+    protected CalculatorImpl() throws RemoteException {
+        super();
+    }
+
+    // Implement add method
+    @Override
+    public int add(int a, int b) throws RemoteException {
+        return a + b;
+    }
+
+    // Implement subtract method
+    @Override
+    public int subtract(int a, int b) throws RemoteException {
+        return a - b;
+    }
+}
+```
+
+✅ **Explanation:**
+
+* `CalculatorImpl` extends `UnicastRemoteObject` to make it a remote object.
+* Methods provide actual implementations for remote calls.
+
+---
+
+### Step 3: Create the RMI Server
+
+```java
+import java.rmi.Naming;
+import java.rmi.registry.LocateRegistry;
+
+public class RMIServer {
+    public static void main(String[] args) {
+        try {
+            // Create remote object
+            CalculatorImpl calculator = new CalculatorImpl();
+
+            // Start RMI registry on port 1099
+            LocateRegistry.createRegistry(1099);
+
+            // Bind the remote object with name "CalculatorService"
+            Naming.rebind("rmi://localhost:1099/CalculatorService", calculator);
+
+            System.out.println("RMI Server is running...");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+✅ **Explanation:**
+
+* RMI registry is started on port `1099`.
+* Remote object is registered with name `CalculatorService`.
+
+**Sample Output (Server side):**
+
+```
+RMI Server is running...
+```
+
+---
+
+### Step 4: Create the RMI Client
+
+```java
+import java.rmi.Naming;
+
+public class RMIClient {
+    public static void main(String[] args) {
+        try {
+            // Look up the CalculatorService from RMI registry
+            Calculator calculator = (Calculator) Naming.lookup("rmi://localhost:1099/CalculatorService");
+
+            // Invoke remote methods
+            int sum = calculator.add(5, 3);
+            int difference = calculator.subtract(5, 3);
+
+            // Print results
+            System.out.println("Sum: " + sum);
+            System.out.println("Difference: " + difference);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+✅ **Explanation:**
+
+* Client connects to the RMI registry and looks up `CalculatorService`.
+* Remote methods `add` and `subtract` are invoked like local methods.
+
+**Sample Output (Client side):**
+
+```
+Sum: 8
+Difference: 2
+```
+
+---
+
+## 12.2 Creating an RMI Server and Client (Summary Flow)
+
+1. **Remote Interface** (`Calculator.java`)
+   Defines remote methods.
+2. **Implementation** (`CalculatorImpl.java`)
+   Provides actual method logic.
+3. **Server** (`RMIServer.java`)
+   Creates and binds remote object to RMI registry.
+4. **Client** (`RMIClient.java`)
+   Looks up remote object and calls its methods.
+
+---
+
+## 12.3 Running the RMI System
+
+### Step 1: Compile Programs
+
+```sh
+javac Calculator.java CalculatorImpl.java RMIServer.java RMIClient.java
+```
+
+### Step 2: Start RMI Registry
+
+```sh
+rmiregistry
+```
+
+*(keep this terminal running)*
+
+### Step 3: Run the RMI Server
+
+```sh
+java RMIServer
+```
+
+### Step 4: Run the RMI Client
+
+```sh
+java RMIClient
+```
+
+---
+
+
