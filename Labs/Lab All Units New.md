@@ -1,6 +1,3 @@
-As an expert code reviewer, we have thoroughly reviewed the provided Java networking code from Units 2 through 12. Our goal was to reformat the code for clarity and consistency without altering its functionality, add missing sample outputs where needed, and ensure proper documentation and formatting. Below, we present the reformatted code for each program, maintaining the original logic and content, along with sample outputs and explanations where applicable. The code has been organized with consistent indentation, proper comments, and a clean structure to enhance readability. We have also ensured that all programs are complete and executable, with sample outputs provided for clarity.
-
----
 
 # Unit 2: Internet Addresses
 
@@ -1713,16 +1710,13 @@ User2: Hi there!
 
 # Unit 7: Server Socket
 
-## Lab 1: Multithreaded Daytime Server
+## Example 1: A Multithreaded Daytime Server
 
-### DaytimeServer.java
+### a. `DaytimeServer.java`
 
 ```java
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.io.*;
+import java.net.*;
 import java.util.Date;
 
 /**
@@ -1730,25 +1724,33 @@ import java.util.Date;
  */
 public class DaytimeServer {
     public static void main(String[] args) {
-        try (ServerSocket server = new ServerSocket(1234)) {
+        try {
+            // Create a server socket listening on port 1234
+            ServerSocket server = new ServerSocket(1234);
             System.out.println("Daytime server started on port 1234...");
+
+            // Continuously accept client connections
             while (true) {
                 try {
+                    // Accept a client connection
                     Socket socket = server.accept();
                     System.out.println("New client connected: " + socket.getInetAddress());
+
+                    // Create a new thread to handle the client request
                     Thread task = new DaytimeThread(socket);
                     task.start();
-                } catch (IOException e) {
-                    System.err.println("Error accepting client connection: " + e.getMessage());
+                } catch (IOException ex) {
+                    System.err.println("Error accepting client connection: " + ex.getMessage());
                 }
             }
-        } catch (IOException e) {
-            System.err.println("Could not start server: " + e.getMessage());
+        } catch (IOException ex) {
+            System.err.println("Could not start server: " + ex.getMessage());
         }
     }
 
+    // Thread class to handle client requests
     private static class DaytimeThread extends Thread {
-        private final Socket socket;
+        private Socket socket;
 
         DaytimeThread(Socket socket) {
             this.socket = socket;
@@ -1756,127 +1758,165 @@ public class DaytimeServer {
 
         @Override
         public void run() {
-            try (Writer out = new OutputStreamWriter(socket.getOutputStream())) {
+            try {
+                // Get the output stream to send data to the client
+                Writer out = new OutputStreamWriter(socket.getOutputStream());
+
+                // Get the current date and time
                 Date now = new Date();
+
+                // Send the date and time to the client
                 out.write(now.toString() + "\r\n");
                 out.flush();
+
+                // Close the socket
+                socket.close();
                 System.out.println("Client disconnected: " + socket.getInetAddress());
-            } catch (IOException e) {
-                System.err.println("Error handling client request: " + e.getMessage());
+            } catch (IOException ex) {
+                System.err.println("Error handling client request: " + ex.getMessage());
             }
         }
     }
 }
 ```
 
-### DaytimeClient.java
-
-```java
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.Socket;
-
-/**
- * A client that retrieves the current date and time from a daytime server.
- */
-public class DaytimeClient {
-    public static void main(String[] args) {
-        String hostname = "localhost";
-        int port = 1234;
-        try (Socket socket = new Socket(hostname, port);
-             BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
-            String serverTime = input.readLine();
-            System.out.println("Server time: " + serverTime);
-        } catch (IOException e) {
-            System.err.println("Client exception: " + e.getMessage());
-        }
-    }
-}
-```
-
-**Sample Output (Server):**
+**Sample Output (Server side):**
 ```
 Daytime server started on port 1234...
 New client connected: /127.0.0.1
 Client disconnected: /127.0.0.1
 ```
 
-**Sample Output (Client):**
+**Explanation:**
+- We create a server socket on port 1234 to listen for client connections.
+- For each client connection, we spawn a new `DaytimeThread` to handle the request.
+- The thread sends the current date and time to the client and closes the connection.
+
+### b. `DaytimeClient.java`
+
+```java
+import java.io.*;
+import java.net.*;
+
+/**
+ * A client that connects to a Daytime server to retrieve the current date and time.
+ */
+public class DaytimeClient {
+    public static void main(String[] args) {
+        String hostname = "localhost"; // Server hostname
+        int port = 1234; // Server port
+
+        try (Socket socket = new Socket(hostname, port)) {
+            // Read the server's response
+            BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            String serverTime = input.readLine();
+
+            // Print the server's time
+            System.out.println("Server time: " + serverTime);
+        } catch (IOException ex) {
+            System.out.println("Client exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+    }
+}
 ```
-Server time: Fri Sep 19 12:45:13 NPT 2025
+
+**Sample Output (Client side):**
+```
+Server time: Fri Sep 19 13:04:05 NPT 2025
 ```
 
 **Explanation:**
-- The server uses multithreading to handle multiple clients concurrently.
-- Each client receives the current date and time.
-- Try-with-resources ensures proper resource closure.
+- We connect to the server at `localhost:1234` using a `Socket`.
+- We read the server's response (current date and time) and print it.
+- The socket is automatically closed using try-with-resources.
 
 ---
 
-## Lab 2: Multithreaded Binary Server and Client
+## Lab 2: MultiThreaded Binary Server and Client
 
-### MultiThreadedBinaryServer.java
+### a. `MultiThreadedBinaryServer.java`
 
 ```java
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.io.*;
+import java.net.*;
 
 /**
  * A multithreaded server that sends binary data to clients.
  */
 public class MultiThreadedBinaryServer {
     public static void main(String[] args) {
-        int port = 12345;
+        int port = 12345; // The port number the server will listen on
+
         try (ServerSocket serverSocket = new ServerSocket(port)) {
             System.out.println("Server is listening on port " + port);
+
             while (true) {
                 Socket socket = serverSocket.accept();
                 System.out.println("New client connected");
+
+                // Create a new thread for each client connection
                 new ServerThread(socket).start();
             }
-        } catch (IOException e) {
-            System.err.println("Server exception: " + e.getMessage());
+        } catch (IOException ex) {
+            System.out.println("Server exception: " + ex.getMessage());
+            ex.printStackTrace();
         }
     }
 }
 
+/**
+ * Thread class to handle client connections and send binary data.
+ */
 class ServerThread extends Thread {
-    private final Socket socket;
+    private Socket socket;
 
     public ServerThread(Socket socket) {
         this.socket = socket;
     }
 
-    @Override
     public void run() {
         try (DataOutputStream out = new DataOutputStream(socket.getOutputStream())) {
-            byte[] binaryData = {1, 2, 3, 4, 5};
+            // Send binary data to the client
+            byte[] binaryData = {1, 2, 3, 4, 5}; // Example binary data
             out.write(binaryData);
             out.flush();
+
             System.out.println("Sent binary data to client");
-        } catch (IOException e) {
-            System.err.println("ServerThread exception: " + e.getMessage());
+        } catch (IOException ex) {
+            System.out.println("ServerThread exception: " + ex.getMessage());
+            ex.printStackTrace();
         } finally {
             try {
                 socket.close();
                 System.out.println("Client disconnected");
-            } catch (IOException e) {
-                System.err.println("Failed to close socket: " + e.getMessage());
+            } catch (IOException ex) {
+                System.out.println("Failed to close socket: " + ex.getMessage());
+                ex.printStackTrace();
             }
         }
     }
 }
 ```
 
-### BinaryDataClient.java
+**Sample Output (Server side):**
+```
+Server is listening on port 12345
+New client connected
+Sent binary data to client
+Client disconnected
+```
+
+**Explanation:**
+- We create a server socket on port 12345 to accept client connections.
+- For each connection, we spawn a `ServerThread` that sends a fixed byte array `{1, 2, 3, 4, 5}` to the client.
+- The thread closes the socket after sending the data.
+
+### b. `BinaryDataClient.java`
 
 ```java
-import java.io.DataInputStream;
-import java.io.IOException;
-import java.net.Socket;
+import java.io.*;
+import java.net.*;
 
 /**
  * A client that receives binary data from a server.
@@ -1885,82 +1925,80 @@ public class BinaryDataClient {
     public static void main(String[] args) {
         String hostname = "localhost";
         int port = 12345;
-        try (Socket socket = new Socket(hostname, port);
-             DataInputStream input = new DataInputStream(socket.getInputStream())) {
+
+        try (Socket socket = new Socket(hostname, port)) {
+            DataInputStream input = new DataInputStream(socket.getInputStream());
+
+            // Read binary data from the server
             byte[] binaryData = new byte[5];
             input.readFully(binaryData);
+
             System.out.println("Received binary data from server:");
             for (byte b : binaryData) {
                 System.out.print(b + " ");
             }
-        } catch (IOException e) {
-            System.err.println("Client exception: " + e.getMessage());
+        } catch (IOException ex) {
+            System.out.println("Client exception: " + ex.getMessage());
+            ex.printStackTrace();
         }
     }
 }
 ```
 
-**Sample Output (Server):**
-```
-Server is listening on port 12345
-New client connected
-Sent binary data to client
-Client disconnected
-```
-
-**Sample Output (Client):**
+**Sample Output (Client side):**
 ```
 Received binary data from server:
 1 2 3 4 5
 ```
 
 **Explanation:**
-- The server sends a fixed byte array to each client in a separate thread.
-- The client reads the exact number of bytes using `readFully`.
-- Try-with-resources ensures proper resource closure.
+- We connect to the server at `localhost:12345` using a `Socket`.
+- We read exactly 5 bytes of binary data from the server using `DataInputStream`.
+- The received bytes are printed to the console.
 
 ---
 
 ## Lab 3: Logging
 
-### LoggedServer.java
+### a. `LoggedServer.java`
 
 ```java
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.io.*;
+import java.net.*;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * A daytime server with logging capabilities.
+ * A server that sends the current date and time to clients with logging.
  */
 public class LoggedServer {
     private static final Logger logger = Logger.getLogger(LoggedServer.class.getName());
 
     public static void main(String[] args) {
         int port = 12345;
+
         try (ServerSocket serverSocket = new ServerSocket(port)) {
             logger.info("Server is listening on port " + port);
+
             while (true) {
                 try {
                     Socket socket = serverSocket.accept();
                     logger.info("New client connected");
-                    new DaytimeThread(socket).start();
-                } catch (IOException e) {
-                    logger.log(Level.SEVERE, "Error accepting client connection", e);
+
+                    Thread task = new DaytimeThread(socket);
+                    task.start();
+                } catch (IOException ex) {
+                    logger.log(Level.SEVERE, "Error accepting client connection", ex);
                 }
             }
-        } catch (IOException e) {
-            logger.log(Level.SEVERE, "Couldn't start server", e);
+        } catch (IOException ex) {
+            logger.log(Level.SEVERE, "Couldn't start server", ex);
         }
     }
 
     private static class DaytimeThread extends Thread {
-        private final Socket socket;
+        private Socket socket;
 
         DaytimeThread(Socket socket) {
             this.socket = socket;
@@ -1968,38 +2006,49 @@ public class LoggedServer {
 
         @Override
         public void run() {
-            try (Writer out = new OutputStreamWriter(socket.getOutputStream())) {
+            try {
+                Writer out = new OutputStreamWriter(socket.getOutputStream());
                 Date now = new Date();
                 out.write(now.toString() + "\r\n");
                 out.flush();
-                logger.info("Sent date to client: " + now);
-            } catch (IOException e) {
-                logger.log(Level.SEVERE, "Error handling client connection", e);
-            } finally {
-                try {
-                    socket.close();
-                    logger.info("Client disconnected");
-                } catch (IOException e) {
-                    logger.log(Level.SEVERE, "Error closing socket", e);
-                }
+                logger.info("Sent date to client: " + now.toString());
+                socket.close();
+                logger.info("Client disconnected");
+            } catch (IOException ex) {
+                logger.log(Level.SEVERE, "Error handling client connection", ex);
             }
         }
     }
 }
 ```
 
-### LoggedClient.java
+**Sample Output (Server side):**
+```
+Sep 19, 2025 1:04:05 PM LoggedServer main
+INFO: Server is listening on port 12345
+Sep 19, 2025 1:04:10 PM LoggedServer main
+INFO: New client connected
+Sep 19, 2025 1:04:10 PM LoggedServer$DaytimeThread run
+INFO: Sent date to client: Fri Sep 19 13:04:10 NPT 2025
+Sep 19, 2025 1:04:10 PM LoggedServer$DaytimeThread run
+INFO: Client disconnected
+```
+
+**Explanation:**
+- We use Java's `Logger` to log server events such as starting, client connections, and sending data.
+- The server listens on port 12345 and spawns a `DaytimeThread` for each client.
+- Each thread sends the current date and time to the client and logs the action.
+
+### b. `LoggedClient.java`
 
 ```java
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.Socket;
+import java.io.*;
+import java.net.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * A client that retrieves the server time with logging.
+ * A client that connects to a server to retrieve the current date and time with logging.
  */
 public class LoggedClient {
     private static final Logger logger = Logger.getLogger(LoggedClient.class.getName());
@@ -2007,231 +2056,215 @@ public class LoggedClient {
     public static void main(String[] args) {
         String hostname = "localhost";
         int port = 12345;
-        try (Socket socket = new Socket(hostname, port);
-             BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+
+        try (Socket socket = new Socket(hostname, port)) {
             logger.info("Connected to server");
+
+            BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             String serverTime = input.readLine();
             logger.info("Received server time: " + serverTime);
-            System.out.println("Server time: " + serverTime);
-        } catch (IOException e) {
-            logger.log(Level.SEVERE, "Client exception", e);
+        } catch (IOException ex) {
+            logger.log(Level.SEVERE, "Client exception", ex);
         }
     }
 }
 ```
 
-**Sample Output (Server):**
+**Sample Output (Client side):**
 ```
-Sep 19, 2025 12:45:13 PM LoggedServer main
-INFO: Server is listening on port 12345
-Sep 19, 2025 12:45:15 PM LoggedServer$DaytimeThread run
-INFO: New client connected
-Sep 19, 2025 12:45:15 PM LoggedServer$DaytimeThread run
-INFO: Sent date to client: Fri Sep 19 12:45:15 NPT 2025
-Sep 19, 2025 12:45:15 PM LoggedServer$DaytimeThread run
-INFO: Client disconnected
-```
-
-**Sample Output (Client):**
-```
-Sep 19, 2025 12:45:15 PM LoggedClient main
+Sep 19, 2025 1:04:10 PM LoggedClient main
 INFO: Connected to server
-Sep 19, 2025 12:45:15 PM LoggedClient main
-INFO: Received server time: Fri Sep 19 12:45:15 NPT 2025
-Server time: Fri Sep 19 12:45:15 NPT 2025
+Sep 19, 2025 1:04:10 PM LoggedClient main
+INFO: Received server time: Fri Sep 19 13:04:10 NPT 2025
 ```
 
 **Explanation:**
-- We use `java.util.logging.Logger` for logging server and client activities.
-- The server logs connection events and responses.
-- The client logs connection and received data.
+- We connect to the server at `localhost:12345` and log the connection event.
+- We read the server's response (current date and time) and log it.
+- The socket is closed automatically using try-with-resources.
 
 ---
 
 ## Lab 4: Server Socket Options
 
-### TimeoutServer.java
+### a. `TimeoutServer.java` (SO_TIMEOUT)
 
 ```java
-import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.net.SocketTimeoutException;
+import java.io.*;
+import java.net.*;
 
 /**
- * A server that uses SO_TIMEOUT to limit the accept timeout.
+ * A server that demonstrates the SO_TIMEOUT socket option.
  */
 public class TimeoutServer {
     public static void main(String[] args) {
         int port = 12345;
+
         try (ServerSocket serverSocket = new ServerSocket(port)) {
-            serverSocket.setSoTimeout(5000);
+            serverSocket.setSoTimeout(5000); // Set timeout to 5000 milliseconds (5 seconds)
             System.out.println("TimeoutServer is listening on port " + port);
+
             while (true) {
                 try {
-                    Socket socket = serverSocket.accept();
+                    Socket socket = serverSocket.accept(); // This will block for up to 5 seconds
                     System.out.println("New client connected to TimeoutServer");
+                    // Handle the client connection
                 } catch (SocketTimeoutException e) {
                     System.out.println("Accept timed out, no incoming connection in 5 seconds");
                 }
             }
-        } catch (IOException e) {
-            System.err.println("Server exception: " + e.getMessage());
+        } catch (IOException ex) {
+            ex.printStackTrace();
         }
     }
 }
 ```
 
-**Sample Output:**
+**Sample Output (Server side, no client connecting):**
 ```
 TimeoutServer is listening on port 12345
+Accept timed out, no incoming connection in 5 seconds
 Accept timed out, no incoming connection in 5 seconds
 ```
 
 **Explanation:**
-- `setSoTimeout(5000)` sets a 5-second timeout for `accept`.
-- If no client connects within 5 seconds, a `SocketTimeoutException` is thrown.
+- We set the `SO_TIMEOUT` option to 5 seconds, causing `accept()` to throw a `SocketTimeoutException` if no client connects within that time.
+- The server continues to listen after each timeout.
 
----
-
-### ReuseAddressServer.java
+### b. `ReuseAddressServer.java` (SO_REUSEADDR)
 
 ```java
-import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.io.*;
+import java.net.*;
 
 /**
- * A server that enables SO_REUSEADDR for quick port reuse.
+ * A server that demonstrates the SO_REUSEADDR socket option.
  */
 public class ReuseAddressServer {
     public static void main(String[] args) {
         int port = 12345;
+
         try (ServerSocket serverSocket = new ServerSocket(port)) {
-            serverSocket.setReuseAddress(true);
+            serverSocket.setReuseAddress(true); // Enable SO_REUSEADDR
             System.out.println("ReuseAddressServer is listening on port " + port);
+
             while (true) {
                 try {
                     Socket socket = serverSocket.accept();
                     System.out.println("New client connected to ReuseAddressServer");
-                } catch (IOException e) {
-                    System.err.println("Error accepting connection: " + e.getMessage());
+                    // Handle the client connection
+                } catch (IOException ex) {
+                    ex.printStackTrace();
                 }
             }
-        } catch (IOException e) {
-            System.err.println("Server exception: " + e.getMessage());
+        } catch (IOException ex) {
+            ex.printStackTrace();
         }
     }
 }
 ```
 
-**Sample Output:**
+**Sample Output (Server side):**
 ```
 ReuseAddressServer is listening on port 12345
 New client connected to ReuseAddressServer
 ```
 
 **Explanation:**
-- `setReuseAddress(true)` allows the port to be reused immediately after the server closes.
-- This prevents "Address already in use" errors.
+- We enable `SO_REUSEADDR` to allow the server to bind to the port even if it was recently used.
+- This is useful for restarting the server without waiting for the port to be released.
 
----
-
-### ReceiveBufferServer.java
+### c. `ReceiveBufferServer.java` (SO_RCVBUF)
 
 ```java
-import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.io.*;
+import java.net.*;
 
 /**
- * A server that sets a custom receive buffer size (SO_RCVBUF).
+ * A server that demonstrates the SO_RCVBUF socket option.
  */
 public class ReceiveBufferServer {
     public static void main(String[] args) {
         int port = 12345;
+
         try (ServerSocket serverSocket = new ServerSocket(port)) {
-            serverSocket.setReceiveBufferSize(65536);
+            serverSocket.setReceiveBufferSize(65536); // Set receive buffer size to 64 KB
             System.out.println("ReceiveBufferServer is listening on port " + port);
+
             while (true) {
                 try {
                     Socket socket = serverSocket.accept();
                     System.out.println("New client connected to ReceiveBufferServer with receive buffer size: " +
                             socket.getReceiveBufferSize());
-                } catch (IOException e) {
-                    System.err.println("Error accepting connection: " + e.getMessage());
+                    // Handle the client connection
+                } catch (IOException ex) {
+                    ex.printStackTrace();
                 }
             }
-        } catch (IOException e) {
-            System.err.println("Server exception: " + e.getMessage());
+        } catch (IOException ex) {
+            ex.printStackTrace();
         }
     }
 }
 ```
 
-**Sample Output:**
+**Sample Output (Server side):**
 ```
 ReceiveBufferServer is listening on port 12345
 New client connected to ReceiveBufferServer with receive buffer size: 65536
 ```
 
 **Explanation:**
-- `setReceiveBufferSize(65536)` sets the receive buffer to 64 KB.
-- The actual buffer size may vary depending on the OS.
+- We set the receive buffer size to 64 KB using `setReceiveBufferSize`.
+- The buffer size is logged when a client connects, though the actual size may depend on the OS.
 
----
-
-### SimpleClient.java
+### d. `SimpleClient.java`
 
 ```java
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.Socket;
+import java.io.*;
+import java.net.*;
 
 /**
- * A simple client to connect to server socket option demos.
+ * A simple client that connects to a server and reads its response.
  */
 public class SimpleClient {
     public static void main(String[] args) {
         String hostname = "localhost";
         int port = 12345;
-        try (Socket socket = new Socket(hostname, port);
-             BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+
+        try (Socket socket = new Socket(hostname, port)) {
             System.out.println("Connected to the server");
+
+            BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             String serverResponse = input.readLine();
             System.out.println("Server response: " + serverResponse);
-        } catch (IOException e) {
-            System.err.println("Client exception: " + e.getMessage());
+        } catch (IOException ex) {
+            System.out.println("Client exception: " + ex.getMessage());
+            ex.printStackTrace();
         }
     }
 }
 ```
 
-**Sample Output:**
+**Sample Output (Client side, assuming used with `LoggedServer`):**
 ```
 Connected to the server
-Server response: Fri Sep 19 12:45:15 NPT 2025
+Server response: Fri Sep 19 13:04:10 NPT 2025
 ```
 
 **Explanation:**
-- A generic client that connects to the server and reads a response.
-- Compatible with the servers above (TimeoutServer, ReuseAddressServer, etc.).
+- We connect to the server at `localhost:12345` and read a single line of response.
+- This client is generic and can work with servers like `TimeoutServer`, `ReuseAddressServer`, or `LoggedServer`.
 
 ---
 
 ## Lab 5: HTTP Servers
 
-### SingleFileServer.java
+### a. `SingleFileServer.java`
 
 ```java
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.net.URL;
+import java.io.*;
+import java.net.*;
 import java.nio.charset.StandardCharsets;
 
 /**
@@ -2240,30 +2273,41 @@ import java.nio.charset.StandardCharsets;
 public class SingleFileServer {
     public static void main(String[] args) {
         int port = 8080;
-        String fileUrl = "https://raw.githubusercontent.com/Sharatmaharjan/Np/main/code/index.html";
+        String fileUrl = "https://raw.githubusercontent.com/Sharatmaharjan/Np/main/code/index.html"; // Raw file URL from GitHub
+
         try {
+            // Fetch the HTML content from the URL
             String content = fetchContentFromUrl(fileUrl);
+
             try (ServerSocket serverSocket = new ServerSocket(port)) {
                 System.out.println("SingleFileServer is listening on port " + port);
+
                 while (true) {
-                    try (Socket socket = serverSocket.accept();
-                         BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                         PrintWriter out = new PrintWriter(socket.getOutputStream(), true)) {
+                    try (Socket socket = serverSocket.accept()) {
                         System.out.println("New client connected");
+
+                        BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                        PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+
+                        // Read the HTTP request (only the first line for simplicity)
                         String requestLine = in.readLine();
                         System.out.println("Request: " + requestLine);
+
                         if (requestLine != null && requestLine.startsWith("GET")) {
+                            // Send HTTP response
                             out.println("HTTP/1.1 200 OK");
                             out.println("Content-Type: text/html");
                             out.println("Content-Length: " + content.length());
                             out.println();
                             out.println(content);
                         }
+
+                        socket.close();
                     }
                 }
             }
         } catch (IOException e) {
-            System.err.println("Server exception: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -2281,94 +2325,92 @@ public class SingleFileServer {
 }
 ```
 
-**Sample Output (Server):**
+**Sample Output (Server side):**
 ```
 SingleFileServer is listening on port 8080
 New client connected
 Request: GET / HTTP/1.1
 ```
 
-**Sample Output (Browser):**
+**Sample Output (Client side, via browser):**
 ```
-[Displays the content of index.html]
+[Contents of index.html displayed in the browser]
 ```
 
 **Explanation:**
-- The server fetches an HTML file from a URL and serves it for GET requests.
-- Try-with-resources ensures proper resource management.
+- We fetch an HTML file from a specified URL and serve it to clients via HTTP.
+- The server listens on port 8080, responds to GET requests with the HTML content, and includes proper HTTP headers.
 
----
-
-### Redirector.java
+### b. `Redirector.java`
 
 ```java
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.io.*;
+import java.net.*;
 
 /**
- * A simple HTTP server that redirects all GET requests to a specified URL.
+ * An HTTP server that redirects clients to a specified URL.
  */
 public class Redirector {
     public static void main(String[] args) {
         int port = 8080;
         String redirectUrl = "http://example.com";
+
         try (ServerSocket serverSocket = new ServerSocket(port)) {
             System.out.println("Redirector is listening on port " + port);
+
             while (true) {
-                try (Socket socket = serverSocket.accept();
-                     BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                     PrintWriter out = new PrintWriter(socket.getOutputStream(), true)) {
+                try (Socket socket = serverSocket.accept()) {
                     System.out.println("New client connected");
+
+                    BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                    PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+
+                    // Read the HTTP request (only the first line for simplicity)
                     String requestLine = in.readLine();
                     System.out.println("Request: " + requestLine);
+
                     if (requestLine != null && requestLine.startsWith("GET")) {
+                        // Send HTTP redirect response
                         out.println("HTTP/1.1 302 Found");
                         out.println("Location: " + redirectUrl);
                         out.println();
                     }
+
+                    socket.close();
                 }
             }
         } catch (IOException e) {
-            System.err.println("Server exception: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 }
 ```
 
-**Sample Output (Server):**
+**Sample Output (Server side):**
 ```
 Redirector is listening on port 8080
 New client connected
 Request: GET / HTTP/1.1
 ```
 
-**Sample Output (Browser):**
+**Sample Output (Client side, via browser):**
 ```
-[Redirects to http://example.com]
+[Browser redirects to http://example.com]
 ```
 
 **Explanation:**
-- The server responds to GET requests with a 302 redirect to the specified URL.
-- Try-with-resources ensures proper resource closure.
+- We create an HTTP server that responds to GET requests with a 302 redirect to `http://example.com`.
+- The server listens on port 8080 and sends the `Location` header to instruct the client to redirect.
 
----
-
-### FullFledgedHttpServer.java
+### c. `FullFledgedHttpServer.java`
 
 ```java
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
-import com.sun.net.httpserver.HttpServer;
-import java.io.IOException;
-import java.io.OutputStream;
+import com.sun.net.httpserver.*;
+import java.io.*;
 import java.net.InetSocketAddress;
 
 /**
- * A full-fledged HTTP server with multiple endpoints.
+ * A full-fledged HTTP server using Java's HttpServer API with multiple endpoints.
  */
 public class FullFledgedHttpServer {
     public static void main(String[] args) throws IOException {
@@ -2376,7 +2418,7 @@ public class FullFledgedHttpServer {
         HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
         server.createContext("/", new RootHandler());
         server.createContext("/hello", new HelloHandler());
-        server.setExecutor(null);
+        server.setExecutor(null); // creates a default executor
         System.out.println("FullFledgedHttpServer is listening on port " + port);
         server.start();
     }
@@ -2386,9 +2428,9 @@ public class FullFledgedHttpServer {
         public void handle(HttpExchange exchange) throws IOException {
             String response = "Welcome to the Full-Fledged HTTP Server!";
             exchange.sendResponseHeaders(200, response.length());
-            try (OutputStream os = exchange.getResponseBody()) {
-                os.write(response.getBytes());
-            }
+            OutputStream os = exchange.getResponseBody();
+            os.write(response.getBytes());
+            os.close();
         }
     }
 
@@ -2397,59 +2439,841 @@ public class FullFledgedHttpServer {
         public void handle(HttpExchange exchange) throws IOException {
             String response = "Hello, world!";
             exchange.sendResponseHeaders(200, response.length());
-            try (OutputStream os = exchange.getResponseBody()) {
-                os.write(response.getBytes());
+            OutputStream os = exchange.getResponseBody();
+            os.write(response.getBytes());
+            os.close();
+        }
+    }
+}
+```
+
+**Sample Output (Server side):**
+```
+FullFledgedHttpServer is listening on port 8080
+```
+
+**Sample Output (Client side, via browser):**
+- For `http://localhost:8080/`:
+```
+Welcome to the Full-Fledged HTTP Server!
+```
+- For `http://localhost:8080/hello`:
+```
+Hello, world!
+```
+
+**Explanation:**
+- We use Java’s `HttpServer` API to create a server with two endpoints: `/` and `/hello`.
+- The server listens on port 8080 and responds with different messages based on the requested path.
+
+---
+
+## Lab 6: Two-way Chat Application
+
+### a. `ChatServer.java`
+
+```java
+import java.io.*;
+import java.net.*;
+
+/**
+ * A server for a two-way chat application using TCP.
+ */
+public class ChatServer {
+    public static void main(String[] args) throws IOException {
+        int port = 4567;
+        ServerSocket serverSocket = new ServerSocket(port);
+        System.out.println("ChatServer is running on port " + port);
+
+        Socket clientSocket = serverSocket.accept();
+        System.out.println("Client connected: " + clientSocket.getInetAddress());
+
+        BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+        PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
+        BufferedReader console = new BufferedReader(new InputStreamReader(System.in));
+
+        // Thread to read messages from client
+        Thread readThread = new Thread(() -> {
+            try {
+                String message;
+                while ((message = in.readLine()) != null) {
+                    System.out.println("Client: " + message);
+                }
+            } catch (IOException e) {
+                System.out.println("Connection closed.");
+            }
+        });
+        readThread.start();
+
+        // Main thread to send messages to client
+        String line;
+        while ((line = console.readLine()) != null) {
+            if (line.equalsIgnoreCase("quit")) break;
+            out.println(line);
+        }
+
+        clientSocket.close();
+        serverSocket.close();
+        System.out.println("Server closed.");
+    }
+}
+```
+
+**Sample Output (Server side):**
+```
+ChatServer is running on port 4567
+Client connected: /127.0.0.1
+Client: Hello, server!
+[Server types: Hi, client!]
+Client: How are you?
+[Server types: I'm doing great!]
+[Server types: quit]
+Server closed.
+```
+
+**Explanation:**
+- We create a TCP server on port 4567 that accepts a single client connection.
+- A separate thread reads messages from the client, while the main thread sends messages typed in the console.
+- The server exits when the user types "quit".
+
+### b. `ChatClient.java`
+
+```java
+import java.io.*;
+import java.net.*;
+
+/**
+ * A client for a two-way chat application using TCP.
+ */
+public class ChatClient {
+    public static void main(String[] args) throws IOException {
+        String serverAddress = "localhost";
+        int port = 4567;
+
+        Socket socket = new Socket(serverAddress, port);
+        System.out.println("Connected to server.");
+
+        BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+        BufferedReader console = new BufferedReader(new InputStreamReader(System.in));
+
+        // Thread to read messages from server
+        Thread readThread = new Thread(() -> {
+            try {
+                String message;
+                while ((message = in.readLine()) != null) {
+                    System.out.println("Server: " + message);
+                }
+            } catch (IOException e) {
+                System.out.println("Connection closed.");
+            }
+        });
+        readThread.start();
+
+        // Main thread to send messages to server
+        String line;
+        while ((line = console.readLine()) != null) {
+            if (line.equalsIgnoreCase("quit")) break;
+            out.println(line);
+        }
+
+        socket.close();
+        System.out.println("Client closed.");
+    }
+}
+```
+
+**Sample Output (Client side):**
+```
+Connected to server.
+[Client types: Hello, server!]
+Server: Hi, client!
+[Client types: How are you?]
+Server: I'm doing great!
+[Client types: quit]
+Client closed.
+```
+
+**Explanation:**
+- We connect to the server at `localhost:4567` using a `Socket`.
+- A separate thread reads messages from the server, while the main thread sends console input to the server.
+- The client exits when the user types "quit".
+
+---
+
+# Unit 9: Non-Blocking I/O
+
+## Lab 1: Non-Blocking I/O
+
+### a. `NonBlockingServer.java`
+
+```java
+import java.io.*;
+import java.net.*;
+import java.nio.*;
+import java.nio.channels.*;
+import java.util.*;
+
+/**
+ * A non-blocking server using Java NIO to handle client connections and messages.
+ */
+public class NonBlockingServer {
+    public static void main(String[] args) throws IOException {
+        // Open a Selector for handling multiple channels in non-blocking mode
+        Selector selector = Selector.open();
+
+        // Open a ServerSocketChannel to listen for incoming client connections
+        ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
+
+        // Bind the server socket to localhost on port 8080
+        serverSocketChannel.bind(new InetSocketAddress("localhost", 8080));
+
+        // Configure the server socket channel to operate in non-blocking mode
+        serverSocketChannel.configureBlocking(false);
+
+        // Register the server socket channel with the selector for "accept" operations
+        serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
+
+        // Infinite loop to continuously handle incoming events
+        while (true) {
+            // Block until at least one channel is ready for an operation
+            selector.select();
+
+            // Get the set of keys corresponding to the channels that are ready
+            Set<SelectionKey> selectedKeys = selector.selectedKeys();
+
+            // Use an iterator to process each key
+            Iterator<SelectionKey> it = selectedKeys.iterator();
+
+            while (it.hasNext()) {
+                SelectionKey key = it.next();
+
+                // Check if the key indicates that a new client connection is ready to be accepted
+                if (key.isAcceptable()) {
+                    // Accept the incoming client connection
+                    ServerSocketChannel server = (ServerSocketChannel) key.channel();
+                    SocketChannel client = server.accept();
+
+                    // Configure the client socket channel to operate in non-blocking mode
+                    client.configureBlocking(false);
+
+                    // Register the client channel with the selector for "read" operations
+                    client.register(selector, SelectionKey.OP_READ);
+                } 
+                // Check if the key indicates that data is available to be read from a client
+                else if (key.isReadable()) {
+                    // Get the client channel and read data into a buffer
+                    SocketChannel client = (SocketChannel) key.channel();
+                    ByteBuffer buffer = ByteBuffer.allocate(256); // Allocate a buffer of size 256 bytes
+
+                    // Read data from the client into the buffer
+                    client.read(buffer);
+
+                    // Prepare the buffer for reading by flipping it
+                    buffer.flip();
+
+                    // Convert the buffer's content to a string and print it
+                    System.out.println(new String(buffer.array()).trim());
+
+                    // Close the client connection after reading the data
+                    client.close();
+                }
+
+                // Remove the processed key to avoid reprocessing it
+                it.remove();
             }
         }
     }
 }
 ```
 
-**Sample Output (Server):**
+**Sample Output (Server side):**
 ```
-FullFledgedHttpServer is listening on port 8080
-```
-
-**Sample Output (Browser):**
-```
-[At http://localhost:8080/]: Welcome to the Full-Fledged HTTP Server!
-[At http://localhost:8080/hello]: Hello, world!
+Hello from client
 ```
 
 **Explanation:**
-- We use `com.sun.net.httpserver.HttpServer` for a robust HTTP server.
-- Multiple endpoints (`/` and `/hello`) are defined with custom handlers.
-- Try-with-resources ensures proper stream closure.
+- We use a `Selector` to manage non-blocking `ServerSocketChannel` and `SocketChannel` operations.
+- The server listens on `localhost:8080` for client connections (`OP_ACCEPT`) and reads data (`OP_READ`).
+- After reading a message, the client connection is closed.
+
+### b. `NonBlockingClient.java`
+
+```java
+import java.io.*;
+import java.net.*;
+import java.nio.*;
+import java.nio.channels.*;
+
+/**
+ * A non-blocking client that sends a message to a server using Java NIO.
+ */
+public class NonBlockingClient {
+    public static void main(String[] args) throws IOException {
+        // Define the server address (localhost on port 8080)
+        InetSocketAddress address = new InetSocketAddress("localhost", 8080);
+
+        // Open a SocketChannel and connect to the server
+        SocketChannel client = SocketChannel.open(address);
+
+        // Prepare the message to send to the server
+        String message = "Hello from client";
+
+        // Wrap the message bytes into a ByteBuffer for sending over the channel
+        ByteBuffer buffer = ByteBuffer.wrap(message.getBytes());
+
+        // Write the message to the server through the channel
+        client.write(buffer);
+
+        // Clear the buffer after writing (optional, as we're closing the channel next)
+        buffer.clear();
+
+        // Close the client channel after sending the message
+        client.close();
+    }
+}
+```
+
+**Sample Output (Client side):**
+```
+[No output, as the client only sends a message and exits]
+```
+
+**Explanation:**
+- We use a `SocketChannel` to connect to the server at `localhost:8080`.
+- We send a single message ("Hello from client") using a `ByteBuffer` and close the connection.
 
 ---
 
-## Lab 6: Two-Way Chat Application
+# Unit 10: UDP Programs
 
-### ChatServer.java
+## Lab 1: UDP Client (Basic)
 
-```java:disable-run
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.net.ServerSocket;
-import java.net.Socket;
+```java
+import java.net.*;
 
 /**
- * A two-way chat server that communicates with a single client.
+ * A basic UDP client that sends a message to a server and receives a response.
  */
-public class ChatServer {
+public class Client {
     public static void main(String[] args) {
-        int port = 4567;
-        try (ServerSocket serverSocket = new ServerSocket(port);
-             Socket clientSocket = serverSocket.accept();
-             BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-             PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
-             BufferedReader console = new BufferedReader(new InputStreamReader(System.in))) {
-            System.out.println("ChatServer is running on port " + port);
-            System.out.println("Client connected: " + clientSocket.getInetAddress());
-            Thread readThread = new Thread(() -> {
-                try {
-                    String message;
-                    while ((message
+        try {
+            // Create DatagramSocket (client side)
+            DatagramSocket socket = new DatagramSocket();
+
+            // Prepare message to send
+            String message = "hello server";
+            byte[] buffer = message.getBytes();
+
+            // Create packet with message, server IP and port
+            DatagramPacket packet = new DatagramPacket(
+                buffer, buffer.length,
+                InetAddress.getByName("127.0.0.1"), // Server address (localhost)
+                4567                               // Server port
+            );
+
+            // Send message to server
+            socket.send(packet);
+            System.out.println("Message sent: " + message);
+
+            // Prepare buffer to receive response
+            packet = new DatagramPacket(new byte[1500], 1500);
+            socket.receive(packet); // Receive reply from server
+
+            // Convert received bytes to string
+            message = new String(packet.getData()).trim();
+            System.out.println("Message received: " + message);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
 ```
+
+**Sample Output (Client side):**
+```
+Message sent: hello server
+Message received: hello client
+```
+
+**Explanation:**
+- We create a `DatagramSocket` to send a UDP packet containing "hello server" to `127.0.0.1:4567`.
+- We receive a response from the server and print it.
+
+## Lab 2: UDP Server (Basic)
+
+```java
+import java.net.*;
+
+/**
+ * A basic UDP server that receives a message and sends a response.
+ */
+public class Server {
+    public static void main(String[] args) {
+        try {
+            // Create DatagramSocket bound to port 4567
+            DatagramSocket socket = new DatagramSocket(4567);
+            System.out.println("Server is running...");
+
+            // Buffer to store client message
+            byte[] buffer = new byte[1500];
+            DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+
+            // Wait for client message
+            socket.receive(packet);
+            String message = new String(packet.getData()).trim();
+            System.out.println("Message received: " + message);
+
+            // Prepare reply message
+            InetAddress clientAddress = packet.getAddress();
+            int clientPort = packet.getPort();
+            message = "hello client";
+            buffer = message.getBytes();
+
+            // Send reply back to client
+            packet = new DatagramPacket(buffer, buffer.length, clientAddress, clientPort);
+            socket.send(packet);
+            System.out.println("Message sent: " + message);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+**Sample Output (Server side):**
+```
+Server is running...
+Message received: hello server
+Message sent: hello client
+```
+
+**Explanation:**
+- We create a `DatagramSocket` on port 4567 to receive a UDP packet from a client.
+- We send a response ("hello client") back to the client’s address and port.
+
+## Lab 3: UDP Client (Interactive with Scanner)
+
+```java
+import java.net.*;
+import java.util.Scanner;
+
+/**
+ * An interactive UDP client that sends user input to a server and receives responses.
+ */
+public class Client {
+    public static void main(String[] args) {
+        try {
+            DatagramSocket socket = new DatagramSocket();
+            Scanner scanner = new Scanner(System.in);
+            String message;
+
+            // Keep sending messages until user types 'exit'
+            while (!(message = scanner.nextLine()).equalsIgnoreCase("exit")) {
+                // Convert message into byte array
+                byte[] buffer = message.getBytes();
+
+                // Send packet to server
+                DatagramPacket packet = new DatagramPacket(
+                    buffer, buffer.length,
+                    InetAddress.getByName("127.0.0.1"),
+                    4567
+                );
+                socket.send(packet);
+                System.out.println("Message sent: " + message);
+
+                // Receive reply from server
+                packet = new DatagramPacket(new byte[1500], 1500);
+                socket.receive(packet);
+                String reply = new String(packet.getData()).trim();
+                System.out.println("Message received: " + reply);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+**Sample Output (Client side, interactive):**
+```
+hello
+Message sent: hello
+Message received: hello
+how are you
+Message sent: how are you
+Message received: how are you
+exit
+```
+
+**Explanation:**
+- We create a `DatagramSocket` and use a `Scanner` to read user input.
+- We send each input as a UDP packet to `127.0.0.1:4567` and receive an echo response.
+- The client exits when the user types "exit".
+
+## Lab 4: UDP Server (Echo Server with Loop)
+
+```java
+import java.net.*;
+
+/**
+ * A UDP echo server that continuously receives and echoes back client messages.
+ */
+public class Server {
+    public static void main(String[] args) {
+        try {
+            DatagramSocket socket = new DatagramSocket(4567);
+            System.out.println("Server is running...");
+
+            while (true) {
+                // Receive message from client
+                byte[] buffer = new byte[1500];
+                DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+                socket.receive(packet);
+                String message = new String(packet.getData()).trim();
+                System.out.println("Client: " + message);
+
+                // Echo back the message
+                InetAddress clientAddress = packet.getAddress();
+                int clientPort = packet.getPort();
+                buffer = message.getBytes();
+                packet = new DatagramPacket(buffer, buffer.length, clientAddress, clientPort);
+                socket.send(packet);
+                System.out.println("Server: " + message);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+**Sample Output (Server side, when multiple messages arrive):**
+```
+Server is running...
+Client: hello
+Server: hello
+Client: how are you
+Server: how are you
+```
+
+**Explanation:**
+- We create a `DatagramSocket` on port 4567 to continuously receive UDP packets.
+- We echo each received message back to the client’s address and port.
+
+---
+
+# Unit 11: Multicasting
+
+## Lab 1: Creating a Multicast Socket
+
+```java
+import java.io.*;
+import java.net.*;
+
+/**
+ * A program that demonstrates creating and joining a multicast socket.
+ */
+public class MulticastExample {
+    public static void main(String[] args) {
+        try {
+            // Create a MulticastSocket bound to port 4446
+            MulticastSocket multicastSocket = new MulticastSocket(4446);
+            System.out.println("Multicast Socket created on port 4446");
+
+            // Join a multicast group at 230.0.0.0
+            InetAddress group = InetAddress.getByName("230.0.0.0");
+            multicastSocket.joinGroup(group);
+            System.out.println("Joined multicast group: 230.0.0.0");
+
+            // Leave the group and close
+            multicastSocket.leaveGroup(group);
+            multicastSocket.close();
+            System.out.println("Left group and socket closed");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+**Sample Output:**
+```
+Multicast Socket created on port 4446
+Joined multicast group: 230.0.0.0
+Left group and socket closed
+```
+
+**Explanation:**
+- We create a `MulticastSocket` on port 4446 and join the multicast group `230.0.0.0`.
+- We leave the group and close the socket immediately after joining.
+
+## Lab 2: Sending Data to a Multicast Group
+
+```java
+import java.io.*;
+import java.net.*;
+
+/**
+ * A program that sends a message to a multicast group.
+ */
+public class MulticastSender {
+    public static void main(String[] args) {
+        try {
+            // Create multicast socket
+            MulticastSocket socket = new MulticastSocket();
+
+            // Multicast group
+            InetAddress group = InetAddress.getByName("230.0.0.0");
+
+            // Message to send
+            String message = "Hello, multicast group!";
+            byte[] buffer = message.getBytes();
+
+            // Packet for multicast group at port 4446
+            DatagramPacket packet = new DatagramPacket(buffer, buffer.length, group, 4446);
+
+            // Send packet
+            socket.send(packet);
+            System.out.println("Message sent: " + message);
+
+            socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+**Sample Output:**
+```
+Message sent: Hello, multicast group!
+```
+
+**Explanation:**
+- We create a `MulticastSocket` and send a message to the multicast group `230.0.0.0` on port 4446.
+- The socket is closed after sending the message.
+
+## Lab 3: Receiving Data from a Multicast Group
+
+```java
+import java.io.*;
+import java.net.*;
+
+/**
+ * A program that receives messages from a multicast group.
+ */
+public class MulticastReceiver {
+    public static void main(String[] args) {
+        try {
+            // Create socket bound to port 4446
+            MulticastSocket socket = new MulticastSocket(4446);
+
+            // Join multicast group
+            InetAddress group = InetAddress.getByName("230.0.0.0");
+            socket.joinGroup(group);
+            System.out.println("Joined multicast group: 230.0.0.0");
+
+            // Prepare buffer for receiving
+            byte[] buffer = new byte[256];
+            DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+
+            // Receive packet
+            socket.receive(packet);
+            String received = new String(packet.getData(), 0, packet.getLength());
+            System.out.println("Received message: " + received);
+
+            // Leave group
+            socket.leaveGroup(group);
+            socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+**Sample Output (when sender is running):**
+```
+Joined multicast group: 230.0.0.0
+Received message: Hello, multicast group!
+```
+
+**Explanation:**
+- We create a `MulticastSocket` on port 4446 and join the multicast group `230.0.0.0`.
+- We receive a single message from the group and print it, then leave the group and close the socket.
+
+---
+
+# Unit 12: Remote Method Invocation (RMI)
+
+## 12.1 Defining and Implementing RMI Service Interface
+
+### Step 1: Define the RMI Service Interface
+
+```java
+import java.rmi.*;
+
+/**
+ * Remote interface for a calculator service.
+ */
+public interface Calculator extends Remote {
+    // Each remote method must throw RemoteException
+    int add(int a, int b) throws RemoteException;
+    int subtract(int a, int b) throws RemoteException;
+}
+```
+
+**Explanation:**
+- We define a `Calculator` interface that extends `Remote`.
+- We declare two remote methods (`add` and `subtract`) that throw `RemoteException`.
+
+### Step 2: Implement the RMI Service Interface
+
+```java
+import java.rmi.*;
+import java.rmi.server.*;
+
+/**
+ * Implementation of the Calculator remote interface.
+ */
+public class CalculatorImpl extends UnicastRemoteObject implements Calculator {
+    // Constructor must throw RemoteException
+    protected CalculatorImpl() throws RemoteException {
+        super();
+    }
+
+    // Implement add method
+    @Override
+    public int add(int a, int b) throws RemoteException {
+        return a + b;
+    }
+
+    // Implement subtract method
+    @Override
+    public int subtract(int a, int b) throws RemoteException {
+        return a - b;
+    }
+}
+```
+
+**Explanation:**
+- We implement the `Calculator` interface by extending `UnicastRemoteObject`.
+- We provide implementations for the `add` and `subtract` methods.
+
+### Step 3: Create the RMI Server
+
+```java
+import java.rmi.*;
+import java.rmi.registry.*;
+
+/**
+ * RMI server that registers a Calculator service.
+ */
+public class RMIServer {
+    public static void main(String[] args) {
+        try {
+            // Create remote object
+            CalculatorImpl calculator = new CalculatorImpl();
+
+            // Start RMI registry on port 1099
+            LocateRegistry.createRegistry(1099);
+
+            // Bind the remote object with name "CalculatorService"
+            Naming.rebind("rmi://localhost:1099/CalculatorService", calculator);
+
+            System.out.println("RMI Server is running...");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+**Sample Output (Server side):**
+```
+RMI Server is running...
+```
+
+**Explanation:**
+- We create an instance of `CalculatorImpl` and register it with the RMI registry on port 1099.
+- The service is bound to the name `CalculatorService`.
+
+### Step 4: Create the RMI Client
+
+```java
+import java.rmi.*;
+
+/**
+ * RMI client that invokes methods on a remote Calculator service.
+ */
+public class RMIClient {
+    public static void main(String[] args) {
+        try {
+            // Look up the CalculatorService from RMI registry
+            Calculator calculator = (Calculator) Naming.lookup("rmi://localhost:1099/CalculatorService");
+
+            // Invoke remote methods
+            int sum = calculator.add(5, 3);
+            int difference = calculator.subtract(5, 3);
+
+            // Print results
+            System.out.println("Sum: " + sum);
+            System.out.println("Difference: " + difference);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+**Sample Output (Client side):**
+```
+Sum: 8
+Difference: 2
+```
+
+**Explanation:**
+- We look up the `CalculatorService` in the RMI registry.
+- We invoke the remote `add` and `subtract` methods and print the results.
+
+---
+
+## 12.2 Creating an RMI Server and Client (Summary Flow)
+
+1. **Remote Interface** (`Calculator.java`): Defines remote methods.
+2. **Implementation** (`CalculatorImpl.java`): Provides method logic.
+3. **Server** (`RMIServer.java`): Registers the remote object with the RMI registry.
+4. **Client** (`RMIClient.java`): Looks up and invokes methods on the remote object.
+
+---
+
+## 12.3 Running the RMI System
+
+### Step 1: Compile Programs
+
+```sh
+javac Calculator.java CalculatorImpl.java RMIServer.java RMIClient.java
+```
+
+### Step 2: Start RMI Registry
+
+```sh
+rmiregistry
+```
+
+*(keep this terminal running)*
+
+### Step 3: Run the RMI Server
+
+```sh
+java RMIServer
+```
+
+### Step 4: Run the RMI Client
+
+```sh
+java RMIClient
+```
+
+---
