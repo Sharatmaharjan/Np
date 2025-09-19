@@ -752,7 +752,7 @@ This%string%has%percent%signs
 
 ---
 
-## Cookie Policy to Block `.gov` Cookies
+## Lab 1: Cookie Policy to Block `.gov` Cookies
 
 ```java
 import java.net.CookieHandler;
@@ -1267,7 +1267,7 @@ Local port: 54321
 
 ## Lab 4: Echo Client and Server
 
-### EchoClient.java
+### a. EchoClient.java
 
 ```java
 import java.io.BufferedReader;
@@ -1307,7 +1307,7 @@ public class EchoClient {
 }
 ```
 
-### EchoServer.java
+### b. EchoServer.java
 
 ```java
 import java.io.BufferedReader;
@@ -1478,7 +1478,7 @@ Registrar WHOIS Server: whois.iana.org
 
 ## Lab 6: Network Client
 
-### SimpleChatServer.java
+### a. SimpleChatServer.java
 
 ```java
 import java.io.BufferedReader;
@@ -1569,7 +1569,7 @@ public class SimpleChatServer {
 }
 ```
 
-### SimpleNetworkClientGUI.java
+### b. SimpleNetworkClientGUI.java
 
 ```java
 import javax.swing.*;
@@ -1710,7 +1710,7 @@ User2: Hi there!
 
 # Unit 7: Server Socket
 
-## Example 1: A Multithreaded Daytime Server
+## Lab 1: A Multithreaded Daytime Server
 
 ### a. `DaytimeServer.java`
 
