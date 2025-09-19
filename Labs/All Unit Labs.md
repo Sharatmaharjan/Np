@@ -2136,7 +2136,7 @@ public class LoggedClient {
 ### Lab 4: Server Socket Options
 
 a. TimeoutServer.java (SO_TIMEOUT)
-```
+```java
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -2167,7 +2167,7 @@ public class TimeoutServer {
 ```
 
 b. ReuseAddressServer.java (SO_REUSEADDR)
-```
+```java
 import java.io.IOException;
 import java.net.ServerSocket;
 
@@ -2405,6 +2405,100 @@ public class FullFledgedHttpServer {
     }
 }
 ```
+---
+
+### Lab 6: Two-way chat application
+
+1. server.java
+   
+```java
+import java.io.*;
+import java.net.*;
+
+public class ChatServer {
+    public static void main(String[] args) throws IOException {
+        int port = 4567;
+        ServerSocket serverSocket = new ServerSocket(port);
+        System.out.println("ChatServer is running on port " + port);
+
+        Socket clientSocket = serverSocket.accept();
+        System.out.println("Client connected: " + clientSocket.getInetAddress());
+
+        BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+        PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
+        BufferedReader console = new BufferedReader(new InputStreamReader(System.in));
+
+        // Thread to read messages from client
+        Thread readThread = new Thread(() -> {
+            try {
+                String message;
+                while ((message = in.readLine()) != null) {
+                    System.out.println("Client: " + message);
+                }
+            } catch (IOException e) {
+                System.out.println("Connection closed.");
+            }
+        });
+        readThread.start();
+
+        // Main thread to send messages to client
+        String line;
+        while ((line = console.readLine()) != null) {
+            if (line.equalsIgnoreCase("quit")) break;
+            out.println(line);
+        }
+
+        clientSocket.close();
+        serverSocket.close();
+        System.out.println("Server closed.");
+    }
+}
+```
+
+2. client.java
+```java
+import java.io.*;
+import java.net.*;
+
+public class ChatClient {
+    public static void main(String[] args) throws IOException {
+        String serverAddress = "localhost";
+        int port = 4567;
+
+        Socket socket = new Socket(serverAddress, port);
+        System.out.println("Connected to server.");
+
+        BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+        BufferedReader console = new BufferedReader(new InputStreamReader(System.in));
+
+        // Thread to read messages from server
+        Thread readThread = new Thread(() -> {
+            try {
+                String message;
+                while ((message = in.readLine()) != null) {
+                    System.out.println("Server: " + message);
+                }
+            } catch (IOException e) {
+                System.out.println("Connection closed.");
+            }
+        });
+        readThread.start();
+
+        // Main thread to send messages to server
+        String line;
+        while ((line = console.readLine()) != null) {
+            if (line.equalsIgnoreCase("quit")) break;
+            out.println(line);
+        }
+
+        socket.close();
+        System.out.println("Client closed.");
+    }
+}
+```
+
+---
 
 # Unit 9: Non Blocking I/O
 
