@@ -675,6 +675,121 @@ This%string%has%percent%signs
 
 ---
 
+# Unit 4: HTTP
+
+## What are significance to control HTTP Keep-Alive system properties. Write a program for a cookie policy that blocks all .gov cookies but allows others.
+
+### 1st Part: Significance of Controlling HTTP Keep-Alive System Properties
+
+**HTTP Keep-Alive** is a feature that allows a **single TCP connection** to be reused for multiple HTTP requests/responses between the client and server, instead of creating a new connection for every request.
+
+### **Significance of Controlling Keep-Alive Properties**
+
+1. **Performance Improvement**
+
+   * Reusing connections reduces the overhead of repeatedly creating and tearing down TCP connections.
+   * Faster page loads due to reduced latency.
+
+2. **Resource Management**
+
+   * If too many connections remain open (idle), server resources (threads, sockets, memory) may be wasted.
+   * By controlling keep-alive timeout and max requests, servers can free resources.
+
+3. **Load Balancing & Scalability**
+
+   * In high-traffic systems, properly tuned keep-alive properties help maintain optimal throughput without exhausting system resources.
+
+4. **Energy Efficiency**
+
+   * On mobile and IoT devices, fewer TCP handshakes mean lower CPU usage and less battery drain.
+
+5. **Custom Control via System Properties**
+   In Java, we can configure keep-alive using system properties like:
+
+   * `http.keepAlive` → `true/false` (default is `true`)
+   * `http.maxConnections` → maximum connections allowed per destination host
+   * `http.keepAlive.duration` (implementation-specific) → how long to keep connection alive
+
+---
+
+### 2nd Part: Cookie Policy to Block `.gov` Cookies
+
+We’ll implement a **custom cookie policy** using `java.net.CookiePolicy`.
+This policy **blocks all cookies from `.gov` domains** while allowing others.
+
+```java
+import java.net.*;
+import java.util.*;
+
+public class CustomCookiePolicy {
+    public static void main(String[] args) throws Exception {
+        // Create CookieManager with custom policy
+        CookieManager manager = new CookieManager(null, new CookiePolicy() {
+            @Override
+            public boolean shouldAccept(URI uri, HttpCookie cookie) {
+                // Block all cookies from domains ending with ".gov"
+                if (uri.getHost().endsWith(".gov")) {
+                    System.out.println("Blocked cookie from: " + uri.getHost() + " → " + cookie);
+                    return false;
+                }
+                // Allow all other cookies
+                System.out.println("Allowed cookie from: " + uri.getHost() + " → " + cookie);
+                return true;
+            }
+        });
+
+        // Set default cookie handler with our policy
+        CookieHandler.setDefault(manager);
+
+        // Example request to test the cookie policy
+        URL url = new URL("http://example.com"); // Replace with actual test site
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+
+        // Read response using BufferedReader
+        BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+        String line;
+        while ((line = reader.readLine()) != null) {
+            System.out.println(line);
+        }
+        reader.close();
+
+        System.out.println("Request finished.");
+    }
+}
+```
+
+---
+
+### Explanation:
+
+1. `CookieManager` manages cookies in Java.
+2. `CookiePolicy` interface allows we to define rules:
+
+   * Here, we override `shouldAccept()`.
+   * If the host ends with `.gov`, cookies are **blocked**.
+   * Otherwise, cookies are **allowed**.
+3. `CookieHandler.setDefault(manager)` sets our custom cookie policy as global.
+4. When making HTTP requests with `HttpURLConnection`, the policy is automatically applied.
+
+---
+
+### 🖥️ Sample Output
+
+If visiting `http://whitehouse.gov`:
+
+```
+Blocked cookie from: whitehouse.gov → sessionid=XYZ123
+```
+
+If visiting `http://example.com`:
+
+```
+Allowed cookie from: example.com → user=sharat
+```
+
+
+
+---
 # Unit 5: URLConnection
 
 The `URLConnection` class in Java is used to establish a connection between the application and a URL resource. It allows retrieving data from web pages, such as content type, header fields, and input streams to read the page's content.
@@ -2611,14 +2726,6 @@ Server: hello
 Client: how are you
 Server: how are you
 ```
-
----
-
-
-Got it ✅
-You want me to do the same thing (rewrite, add **comments + explanations + sample output**) for **Unit 11: Multicasting** just like I did for Unit 2 (Internet Addresses) and Unit 10 (UDP).
-
-Here’s the rewritten and detailed version:
 
 ---
 
