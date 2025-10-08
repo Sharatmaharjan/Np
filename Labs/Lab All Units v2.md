@@ -574,8 +574,7 @@ http://ibiblio.org/ is the same as http://www.ibiblio.org/
 ```
 
 **Explanation:**
-- We use `URL.equals` to compare whether two URLs resolve to the same address.
-- The comparison considers DNS resolution, so `www.ibiblio.org` and `ibiblio.org` may be equal if they resolve to the same IP.
+- URL.equals() checks both IP resolution and the full URL structure (protocol, host, port, and path).
 - Exception handling ensures robustness for malformed URLs.
 
 ---
