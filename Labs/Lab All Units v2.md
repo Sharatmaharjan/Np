@@ -2633,7 +2633,7 @@ public class NonBlockingServer {
         Selector selector = Selector.open();    //Selector → To monitor multiple sockets at once
 
         // Open a ServerSocketChannel to listen for incoming client connections
-        ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
+        ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();    //using a static factory method since ServerSocketChannel doesn’t have a public constructor
 
         // Bind the server socket to localhost on port 8080
         serverSocketChannel.bind(new InetSocketAddress("localhost", 8080));
