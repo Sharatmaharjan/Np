@@ -2602,6 +2602,17 @@ Client closed.
 
 # Unit 9: Non-Blocking I/O
 
+- In traditional (blocking) I/O:
+    Each client connection uses its own thread, and methods like read() or accept() block until something happens.
+
+- In non-blocking I/O (NIO):
+    All client connections are handled by a single thread, using a Selector that tells when each socket is ready for an operation (accept, read, write).
+
+- A Selector monitors multiple channels (sockets) at once.
+- It can tell which ones are ready to read, ready to write, or ready to accept connections.
+
+This design is highly scalable — one thread can handle hundreds or thousands of clients efficiently.
+
 ## Lab 1: Non-Blocking I/O
 
 ### a. `NonBlockingServer.java`
@@ -2618,8 +2629,8 @@ import java.util.*;
  */
 public class NonBlockingServer {
     public static void main(String[] args) throws IOException {
-        // Open a Selector for handling multiple channels in non-blocking mode
-        Selector selector = Selector.open();
+        // Open a Selector for handling multiple channels at once in non-blocking mode
+        Selector selector = Selector.open();    //Selector → To monitor multiple sockets at once
 
         // Open a ServerSocketChannel to listen for incoming client connections
         ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
