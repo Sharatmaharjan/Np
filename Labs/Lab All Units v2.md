@@ -2652,6 +2652,10 @@ public class NonBlockingServer {
             // Get the set of keys corresponding to the channels that are ready
             Set<SelectionKey> selectedKeys = selector.selectedKeys();
 
+            // The key contains information about:
+            // Which channel is ready
+            // What operation it’s ready for (accept, read, write, etc.)
+
             // Use an iterator to process each key
             Iterator<SelectionKey> it = selectedKeys.iterator();
 
